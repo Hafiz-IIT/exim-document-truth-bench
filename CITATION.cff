@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this research prototype, please cite the repository release."
+title: "EXIM Document Truth Bench"
+type: software
+authors:
+  - family-names: "Ali"
+    given-names: "Syed Hafiz"
+repository-code: "https://github.com/Hafiz-IIT/exim-document-truth-bench"
+version: "0.1.0"
+date-released: 2026-09-28

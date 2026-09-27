@@ -1,0 +1,19 @@
+{
+  "shipment_id": "S-100",
+  "documents": [
+    "invoice",
+    "packing_list",
+    "declaration"
+  ],
+  "cross_fields": [
+    "shipment_id",
+    "consignee",
+    "gross_weight_kg"
+  ],
+  "stressors": [
+    "mismatch",
+    "missing-document",
+    "stale-authorization",
+    "correlated-source"
+  ]
+}
