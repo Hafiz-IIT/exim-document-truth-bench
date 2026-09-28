@@ -45,3 +45,8 @@ The benchmark focuses on downstream truth consistency rather than merely field-e
 
 ## License
 MIT.
+
+## Extended implementation
+
+- `scenario_generator.py` — reproducible consistent, missing, mismatched, correlated-source and stale-authorization scenarios.
+- `tests/test_scenario_generator.py` — end-to-end truth-action expectations.
