@@ -1,52 +1,47 @@
 # EXIM Document Truth Bench
 
-> **Correct extraction is not the same thing as correct evidence.**
+> Synthetic EXIM benchmark for separating extraction accuracy from cross-document truth consistency and evidence quality.
 
-Trade-document automation can perfectly extract multiple documents while the documents themselves disagree, omit required evidence, rely on stale authorization, or originate from correlated sources. This benchmark isolates that reliability problem before any downstream customs or logistics action.
+## Status
+**Reproducible prototype** with executable Python, deterministic tests, and CI. It does not claim production deployment, regulatory approval, or real-world validation.
 
-## Implemented
+## Problem
+An OCR/extraction system can be locally correct while the documents themselves conflict, are incomplete, stale, or share a common failure source.
 
-- synthetic invoice/packing-list/declaration records
-- required-document detection
-- cross-document shipment/consignee/weight consistency checks
-- stale-authorization detection
-- correlated-source-group warning
-- ACT / VERIFY / ESCALATE outcome
-- deterministic tests
-
-## Repository map
-
-| Path | Purpose |
-|---|---|
-| `exim_document_truth_bench.py` | Core implementation |
-| `tests/` | Deterministic tests |
-| `examples/` | Reproducible synthetic/example case |
-| `docs/architecture.md` | Architecture |
-| `docs/research-agenda.md` | Experiments and research lineage |
-| `STATUS.md` | Claims boundary and maturity |
-| `CITATION.cff` | Citation metadata |
+## Architecture
+Trade documents → normalized fields → cross-document consistency checks → missing/stale/correlated evidence analysis → ACT / VERIFY / ESCALATE.
 
 ## Quick start
-
 ```bash
 python -m unittest discover -s tests -v
 python exim_document_truth_bench.py
 ```
 
-## Architecture
+## Implemented
+- Synthetic trade-document records
+- Cross-field mismatch detection
+- Required-document checks
+- Stale authorization detection
+- Correlated-source warning
+- ACT / VERIFY / ESCALATE report
+- Tests and CI
 
-**trade documents → field extraction representation → required-document check → cross-document consistency → freshness + source checks → ACT / VERIFY / ESCALATE**
+## Evaluation
+The benchmark focuses on downstream truth consistency rather than merely field-extraction correctness.
 
 ## Research lineage
+- *The Future of Digital Trust: Secure Data Interactions in User-Centric Platforms*
+- *Framework for Ethical AI Deployment in Consumer-Oriented Systems*
+- *Scalable Architectures for Distributed Intelligent Agents*
 
-This repository is a direct descendant of the multi-year EXIM AI work: document ingestion, extraction, discrepancy handling, correction/revalidation, evidence verification, and escalation. It is intentionally narrower than the full product vision.
+## Limitations
+- Synthetic records only
+- No real customs data
+- No OCR model bundled
+- No ICEGATE/DGFT integration
 
-The historical titles named in this repository are research directions, not claims that those manuscripts have already been published.
+## Structure
+`exim_document_truth_bench.py` · `tests/` · `docs/` · `ROADMAP.md` · `CITATION.cff` · CI
 
-## Evaluation direction
-
-Create controlled synthetic corruption regimes and compare naive 'all fields parsed' automation with explicit truth/consistency gating. Later add de-identified or public-domain trade-document datasets if legally and ethically usable.
-
-## Status
-
-**Reproducible research prototype.** No real customs records, production OCR, ICEGATE/DGFT integration, legal compliance certification, or operational clearance decision is represented.
+## License
+MIT.

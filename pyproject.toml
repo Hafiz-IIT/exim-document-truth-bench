@@ -1,0 +1,14 @@
+[build-system]
+requires=["setuptools>=68"]
+build-backend="setuptools.build_meta"
+
+[project]
+name="exim-document-truth-bench"
+version="0.1.0"
+description="Synthetic EXIM benchmark for separating extraction accuracy from cross-document truth consistency and evidence quality."
+requires-python=">=3.10"
+license={text="MIT"}
+authors=[{name="Syed Hafiz Ali"}]
+
+[tool.setuptools]
+py-modules=["exim_document_truth_bench"]
