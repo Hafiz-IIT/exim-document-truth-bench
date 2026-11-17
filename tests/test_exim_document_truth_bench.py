@@ -32,6 +32,15 @@ class TruthBenchTests(unittest.TestCase):
         )
         self.assertEqual(validate(docs, today_day=102).action, Action.ESCALATE)
 
+    def test_duplicate_document_kind_escalates_instead_of_overwriting(self):
+        docs = synthetic_consistent_case()
+        duplicate = TradeDocument(
+            "invoice", {**docs[0].fields, "gross_weight_kg": "1500"}, "second-invoice", 101
+        )
+        report = validate([*docs, duplicate], today_day=102)
+        self.assertEqual(report.action, Action.ESCALATE)
+        self.assertEqual(report.duplicate_kinds, ("invoice",))
+
 
 if __name__ == "__main__":
     unittest.main()
