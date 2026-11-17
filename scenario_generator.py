@@ -45,12 +45,20 @@ def scenarios() -> tuple[Scenario, ...]:
         TradeDocument("declaration", base, "broker", 11, authorization_expires_day=11),
     )
 
+    duplicate_kind = (
+        consistent[0],
+        TradeDocument("invoice", {**base, "gross_weight_kg": "1200"}, "second-invoice-source", 10),
+        consistent[1],
+        consistent[2],
+    )
+
     return (
         Scenario("consistent", consistent, 11, Action.ACT),
         Scenario("missing", consistent[:2], 11, Action.VERIFY),
         Scenario("mismatch", mismatch, 11, Action.ESCALATE),
         Scenario("correlated", correlated, 11, Action.VERIFY),
         Scenario("stale", stale, 12, Action.ESCALATE),
+        Scenario("duplicate_document_kind", duplicate_kind, 11, Action.ESCALATE),
     )
 
 
@@ -70,6 +78,7 @@ def run_benchmark(items: tuple[Scenario, ...] | None = None) -> dict:
             "missing": report.missing_kinds,
             "stale": report.stale_authorizations,
             "correlated": report.correlated_source_groups,
+            "duplicate_kinds": report.duplicate_kinds,
             "correct": ok,
         })
     return {
