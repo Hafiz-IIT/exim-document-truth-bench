@@ -27,6 +27,7 @@ class TruthReport:
     missing_kinds: tuple[str, ...]
     stale_authorizations: tuple[str, ...]
     correlated_source_groups: tuple[str, ...]
+    duplicate_kinds: tuple[str, ...]
 
 
 REQUIRED = ("invoice", "packing_list", "declaration")
@@ -44,6 +45,7 @@ def _duplicates(values: list[str]) -> tuple[str, ...]:
 
 
 def validate(documents: list[TradeDocument], *, today_day: int) -> TruthReport:
+    duplicate_kinds = _duplicates([doc.kind for doc in documents])
     by_kind = {doc.kind: doc for doc in documents}
     missing = tuple(kind for kind in REQUIRED if kind not in by_kind)
 
@@ -67,7 +69,7 @@ def validate(documents: list[TradeDocument], *, today_day: int) -> TruthReport:
     groups = [doc.source_group for doc in documents]
     correlated = _duplicates(groups)
 
-    if mismatches or stale:
+    if mismatches or stale or duplicate_kinds:
         action = Action.ESCALATE
     elif missing or correlated:
         action = Action.VERIFY
@@ -80,6 +82,7 @@ def validate(documents: list[TradeDocument], *, today_day: int) -> TruthReport:
         missing_kinds=missing,
         stale_authorizations=tuple(sorted(stale)),
         correlated_source_groups=correlated,
+        duplicate_kinds=duplicate_kinds,
     )
 
 
