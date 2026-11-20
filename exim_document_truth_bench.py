@@ -27,6 +27,8 @@ class TruthReport:
     missing_kinds: tuple[str, ...]
     stale_authorizations: tuple[str, ...]
     correlated_source_groups: tuple[str, ...]
+    duplicate_document_kinds: tuple[str, ...] = ()
+    future_documents: tuple[str, ...] = ()
 
 
 REQUIRED = ("invoice", "packing_list", "declaration")
@@ -44,6 +46,10 @@ def _duplicates(values: list[str]) -> tuple[str, ...]:
 
 
 def validate(documents: list[TradeDocument], *, today_day: int) -> TruthReport:
+    if isinstance(today_day, bool) or not isinstance(today_day, int):
+        raise ValueError("today_day must be an integer day index")
+    kinds = [doc.kind for doc in documents]
+    duplicate_kinds = _duplicates(kinds)
     by_kind = {doc.kind: doc for doc in documents}
     missing = tuple(kind for kind in REQUIRED if kind not in by_kind)
 
@@ -66,8 +72,11 @@ def validate(documents: list[TradeDocument], *, today_day: int) -> TruthReport:
 
     groups = [doc.source_group for doc in documents]
     correlated = _duplicates(groups)
+    future = tuple(sorted(doc.kind for doc in documents if doc.issued_day > today_day))
 
-    if mismatches or stale:
+    # Duplicate primary document kinds and future-dated records are ambiguous
+    # evidence states, not safe last-write-wins updates.
+    if mismatches or stale or duplicate_kinds or future:
         action = Action.ESCALATE
     elif missing or correlated:
         action = Action.VERIFY
@@ -80,6 +89,8 @@ def validate(documents: list[TradeDocument], *, today_day: int) -> TruthReport:
         missing_kinds=missing,
         stale_authorizations=tuple(sorted(stale)),
         correlated_source_groups=correlated,
+        duplicate_document_kinds=duplicate_kinds,
+        future_documents=future,
     )
 
 
