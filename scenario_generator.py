@@ -44,6 +44,17 @@ def scenarios() -> tuple[Scenario, ...]:
         consistent[1],
         TradeDocument("declaration", base, "broker", 11, authorization_expires_day=11),
     )
+    duplicate = (
+        consistent[0],
+        TradeDocument("invoice", {**base, "gross_weight_kg": "1200"}, "commercial-copy", 10),
+        consistent[1],
+        consistent[2],
+    )
+    future = (
+        consistent[0],
+        consistent[1],
+        TradeDocument("declaration", base, "broker", 15),
+    )
 
     return (
         Scenario("consistent", consistent, 11, Action.ACT),
@@ -51,6 +62,8 @@ def scenarios() -> tuple[Scenario, ...]:
         Scenario("mismatch", mismatch, 11, Action.ESCALATE),
         Scenario("correlated", correlated, 11, Action.VERIFY),
         Scenario("stale", stale, 12, Action.ESCALATE),
+        Scenario("duplicate_invoice", duplicate, 11, Action.ESCALATE),
+        Scenario("future_dated", future, 11, Action.ESCALATE),
     )
 
 
@@ -72,10 +85,20 @@ def run_benchmark(items: tuple[Scenario, ...] | None = None) -> dict:
             "correlated": report.correlated_source_groups,
             "correct": ok,
         })
+    unsafe_den = sum(item.expected != Action.ACT for item in items)
+    safe_den = sum(item.expected == Action.ACT for item in items)
+    unsafe = sum(row["expected"] != Action.ACT and row["actual"] == Action.ACT for row in rows)
+    false_blocks = sum(row["expected"] == Action.ACT and row["actual"] != Action.ACT for row in rows)
     return {
         "total": len(rows),
         "correct": correct,
         "accuracy": correct / len(rows) if rows else 0.0,
+        "unsafe_actions": unsafe,
+        "unsafe_action_denominator": unsafe_den,
+        "unsafe_action_rate": unsafe / unsafe_den if unsafe_den else None,
+        "false_blocks": false_blocks,
+        "valid_control_denominator": safe_den,
+        "false_block_rate": false_blocks / safe_den if safe_den else None,
         "rows": rows,
     }
 
