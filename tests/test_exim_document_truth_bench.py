@@ -25,6 +25,24 @@ class TruthBenchTests(unittest.TestCase):
         self.assertEqual(report.action, Action.VERIFY)
         self.assertIn("declaration", report.missing_kinds)
 
+    def test_duplicate_document_kind_escalates(self):
+        docs = synthetic_consistent_case()
+        docs.insert(1, TradeDocument("invoice", docs[0].fields, "commercial-copy", 100))
+        report = validate(docs, today_day=102)
+        self.assertEqual(report.action, Action.ESCALATE)
+        self.assertEqual(report.duplicate_document_kinds, ("invoice",))
+
+    def test_future_dated_document_escalates(self):
+        docs = synthetic_consistent_case()
+        docs[2] = TradeDocument("declaration", docs[2].fields, "broker", 103)
+        report = validate(docs, today_day=102)
+        self.assertEqual(report.action, Action.ESCALATE)
+        self.assertEqual(report.future_documents, ("declaration",))
+
+    def test_today_day_must_be_integer(self):
+        with self.assertRaises(ValueError):
+            validate(synthetic_consistent_case(), today_day=102.5)
+
     def test_stale_authorization_escalates(self):
         docs = synthetic_consistent_case()
         docs[2] = TradeDocument(
