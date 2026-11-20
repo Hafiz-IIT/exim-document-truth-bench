@@ -35,6 +35,14 @@ class TruthBenchTests(unittest.TestCase):
         report=validate(docs+[docs[0]],today_day=102)
         self.assertEqual(report.action,Action.ESCALATE)
         self.assertEqual(report.duplicate_kinds,("invoice",))
+    def test_document_fields_are_defensively_copied_and_immutable(self):
+        fields = {"shipment_id": "S-100", "consignee": "ACME", "gross_weight_kg": "1200"}
+        document = TradeDocument("invoice", fields, "commercial", 100)
+        fields["gross_weight_kg"] = "9999"
+        self.assertEqual(document.fields["gross_weight_kg"], "1200")
+        with self.assertRaises(TypeError):
+            document.fields["gross_weight_kg"] = "8888"
+
     def test_invalid_day_and_empty_field_rejected(self):
         with self.assertRaises(ValueError): validate(synthetic_consistent_case(),today_day=-1)
         with self.assertRaises(ValueError): TradeDocument("invoice",{"weight":" "},"issuer",1)
