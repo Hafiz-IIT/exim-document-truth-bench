@@ -39,6 +39,8 @@ class TruthReport:
     stale_authorizations: tuple[str, ...]
     correlated_source_groups: tuple[str, ...]
     future_issued_documents: tuple[str, ...]
+    missing_fields: tuple[str, ...]
+    duplicate_kinds: tuple[str, ...]
 
 REQUIRED = ("invoice", "packing_list", "declaration")
 CROSS_FIELDS = ("shipment_id", "consignee", "gross_weight_kg")
@@ -56,11 +58,17 @@ def validate(documents: list[TradeDocument], *, today_day: int) -> TruthReport:
     if isinstance(today_day, bool) or not isinstance(today_day, int) or today_day < 0:
         raise ValueError("today_day must be a non-negative integer")
     duplicate_kinds = _duplicates([doc.kind for doc in documents])
-    if duplicate_kinds:
-        raise ValueError("duplicate document kinds: " + ", ".join(duplicate_kinds))
     by_kind = {doc.kind: doc for doc in documents}
     missing = tuple(kind for kind in REQUIRED if kind not in by_kind)
     mismatches = []
+    missing_fields = []
+    for kind in REQUIRED:
+        doc = by_kind.get(kind)
+        if doc is None:
+            continue
+        for field in CROSS_FIELDS:
+            if field not in doc.fields:
+                missing_fields.append(f"{kind}.{field}")
     for field in CROSS_FIELDS:
         values = {doc.fields[field] for doc in documents if field in doc.fields}
         if len(values) > 1: mismatches.append(field)
@@ -68,10 +76,11 @@ def validate(documents: list[TradeDocument], *, today_day: int) -> TruthReport:
         if doc.authorization_expires_day is not None and today_day > doc.authorization_expires_day))
     future = tuple(sorted(doc.kind for doc in documents if doc.issued_day > today_day))
     correlated = _duplicates([doc.source_group for doc in documents])
-    if mismatches or stale or future: action = Action.ESCALATE
-    elif missing or correlated: action = Action.VERIFY
+    if mismatches or stale or future or duplicate_kinds: action = Action.ESCALATE
+    elif missing or missing_fields or correlated: action = Action.VERIFY
     else: action = Action.ACT
-    return TruthReport(action, tuple(sorted(mismatches)), missing, stale, correlated, future)
+    return TruthReport(action, tuple(sorted(mismatches)), missing, stale, correlated, future,
+                       tuple(sorted(missing_fields)), duplicate_kinds)
 
 def synthetic_consistent_case() -> list[TradeDocument]:
     shared = {"shipment_id": "S-100", "consignee": "ACME", "gross_weight_kg": "1200"}
