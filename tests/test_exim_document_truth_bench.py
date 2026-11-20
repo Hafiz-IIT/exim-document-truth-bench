@@ -24,9 +24,17 @@ class TruthBenchTests(unittest.TestCase):
         report=validate(docs,today_day=102)
         self.assertEqual(report.action,Action.ESCALATE)
         self.assertEqual(report.future_issued_documents,("invoice",))
-    def test_duplicate_document_kind_rejected(self):
+    def test_missing_cross_document_field_requires_verification(self):
         docs=synthetic_consistent_case()
-        with self.assertRaises(ValueError): validate(docs+[docs[0]],today_day=102)
+        docs[1]=TradeDocument("packing_list", {"shipment_id":"S-100", "consignee":"ACME"}, "warehouse", 100)
+        report=validate(docs,today_day=102)
+        self.assertEqual(report.action,Action.VERIFY)
+        self.assertIn("packing_list.gross_weight_kg",report.missing_fields)
+    def test_duplicate_document_kind_escalates(self):
+        docs=synthetic_consistent_case()
+        report=validate(docs+[docs[0]],today_day=102)
+        self.assertEqual(report.action,Action.ESCALATE)
+        self.assertEqual(report.duplicate_kinds,("invoice",))
     def test_invalid_day_and_empty_field_rejected(self):
         with self.assertRaises(ValueError): validate(synthetic_consistent_case(),today_day=-1)
         with self.assertRaises(ValueError): TradeDocument("invoice",{"weight":" "},"issuer",1)
