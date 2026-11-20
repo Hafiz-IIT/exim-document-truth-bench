@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
+from types import MappingProxyType
 from typing import Mapping
 
 class Action(str, Enum):
@@ -25,6 +26,9 @@ class TradeDocument:
             for k, v in self.fields.items()
         ):
             raise ValueError("document fields must map non-empty strings to non-empty strings")
+        # Defensively copy and freeze caller-owned mappings so validation cannot
+        # be invalidated by mutating the original dict after construction.
+        object.__setattr__(self, "fields", MappingProxyType(dict(self.fields)))
         if isinstance(self.issued_day, bool) or not isinstance(self.issued_day, int) or self.issued_day < 0:
             raise ValueError("issued_day must be a non-negative integer")
         expiry = self.authorization_expires_day
